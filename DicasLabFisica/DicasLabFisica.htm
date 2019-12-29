@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Dicas para Laboratórios de Física com Python</title>
+    <link rel="stylesheet" href="../styles.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  </head>
+  <body>
+    <div style="width=100%">
+      <div style= "background-color:#659ec7; width:100%">
+        <h1 style="font-family:Fantasy;color:#ffffff;">Oozaku</h1>
+      </div>
+      <div style= "width:20%; float:left">
+        <h3 style="font-color:#659ec7;weigth:bold;">Menu</h3><br>
+        <a href="../index.htm">Página inicial</a>
+      </div>
+      <div style="background-color:#ffffff; width:70%; float:right">
+      <h1>Dicas para Labs de Física com Python</h1>
+      <br>
+      <p>
+        Estarei explicando aqui alguns dos recursos utilizados para a confecção de
+        relatórios do laboratório de física, que são úteis especialmente no final de física
+        experimental 1 (F 129) e as demais 2 (F 229), 3 (F 329) e 4 (F 429), quando começam a exigir o cálculo de
+        propagação de incertezas e a representação de incertezas em gráficos feitos
+        por softwares.
+      </p>
+      <a href="#parte2">2. Plotando gráficos com <i>matplotlib.pyplot</i> e representação de incertezas</a>
+      <br>
+      <a href="#parte3">3. MMQ</a>
+      <br>
+      <h2 id="parte1">1. Utilizando a biblioteca Sympy</h2>
+      <p>
+        A biblioteca Sympy está disponível junto com a instalação de Anaconda e é especialmente
+        útil para os relatórios de Física já que permite calcular de forma mais rápida a propagação
+        de incertezas e ele ainda tem uma função para imprimir as equações em <i>Latex</i>, i.e. ele
+        calcula analiticamente as derivadas parciais e não calcula simplesmente uma aproximação numérica
+        para a equação diferencial, logo podemos tanto obter o valor numérico da incerteza quanto a
+        equação para mostrar no relatório.
+      </p>
+      <p>
+        Como exemplo temos a seguinte equação embaixo e queremos
+        calcular a propagação de incetezas dela considerando incerteza tanto em <i>a</i> quanto em <i>d</i> e
+        para isso teríamos que aplicar regra da cadeia dentro dos senos, chegando à equação <b>2</b>. Nesse processo
+        gastaríamos muito tempo e teríamos o risco de errar em algum processo dos cálculos.
+      </p>
+
+      <figure>
+        <img src="equacaoN.png" alt="equacao 1">
+        <figcaption><b>Equação 1</b> - Índice de refração <i>n</i></figcaption>
+      </figure>
+
+      <figure>
+        <img src="incertezaN.png" alt="equacao 2">
+        <figcaption><b>Equação 2</b> - Incerteza em relação ao valor do índice de refração <i>u<sub>n</sub></i></figcaption>
+      </figure>
+
+      <p>
+        A seguir o meu código para calcular a propagação de incerteza, pensando que há incertezas em relação às variáveis
+        <i>a</i> e <i>b</i>. Em <b>1</b> declaramos as variáveis que utilizaremos para as equações onde no lado esquerdo
+        da igualdade é como escreveremos as variáveis nas equações e dentro de symbols() colocamos como que queremos
+        imprimir em <i>Latex</i>. Em <b>2</b> escrevemos a equação 1 utilizando os símbolos declarados anteriormente,
+        para mais operações matemáticas como cosseno e tangente <a href="https://docs.sympy.org/latest/modules/functions/elementary.html" target="_blank">consulte aqui</a>.
+        Em <b>3</b> calculamos a propagação de incerteza, onde diff(<i>equação</i>,<i>variável</i>) realiza a derivada parcial da
+        <i>equação</i> em relação à <i>variável</i>, observe que utilizamos a mesma equação de propagação de incerteza
+        vista nas aulas. <a href="https://scipy-lectures.org/packages/sympy.html#calculus" target="_blank">Consulte aqui outras operações de cálculo</a>.
+      </p>
+
+      <figure>
+        <figcaption><b>Código 1</b> - Exemplo de código para calcular a propagação de incerteza</figcaption>
+        <code><pre>
+          from sympy import *
+          # Declarando as variaveis a, d, ua, ud <b>(#1)</b>
+          a,d,ua,ud = symbols('a d u_a u_d')
+          # Escrevendo a equacao 1 <b>(#2)</b>
+          valor_n = sin( (a+d) / 2 ) / sin(a/2)
+          # Calculando a propagação de incerteza e armazenando a equação em inc_n <b>(#3)</b>
+          inc_n = sqrt(diff(valor_n,a)**2 * ua**2 + diff(valor_n,d)**2 * ud**2)
+        </pre></code>
+      </figure>
+
+      <p>
+        Por fim, para imprimirmos cada equação em latex para a confecção do relatório usamos <i>print(latex(nome_da equação))</i>
+        e para calcular o valor numérico da incerteza escrevemos <i>valor=equação.subs([(var1,valor1),(var2,valor2),...,(varn,valorn)])</i>
+        onde varn é o nome da variável e valorn é  o valor numérico. <em>IMPORTANTE:</em> para passar o valor obtido pelo <i>Sympy</i> para
+        o <i>matplotlib</i> devemos realizar <i>float(valor)</i>, pois por algum motivo o <i>matplotlib</i> não aceita o float do <i>Sympy</i>.
+      </p>
+
+      <h2 id="parte2">2. Plotando gráficos com <i>matplotlib.pyplot</i> e representação de incertezas</h2>
+
+      <p>
+        Para representar incertezas em uma função contínua utilizamos a função <i>plt.fill_between()</i>, que preenche
+        uma região deliminatada pelas curvas "superior" e "inferior" em função de x, com essa mesma função podemos especificar a
+        cor em <i>color</i> e a opacidade em <i>alpha</i>, valor entre 0(transparente) e 1(opaco). Para representar incertezas em pontos
+        discretos utilizamos as barras de incerteza com a função <i>plt.errorbar()</i>.
+      </p>
+
+      <figure>
+        <figcaption><b>Código 2</b> - Código usado para plotar a figura 1</figcaption>
+        <code><pre>
+          # Preenchendo a região de incerteza com a cor cinza "clara"
+          plt.fill_between(x, inferior, superior, color='grey', alpha=0.2)
+          # Plotando a curva
+          plt.plot(x, y)
+          # Declarando o intervalo de x que queremos plotar
+          plt.xlim([45,60])
+          # Para declarar intervalo de y faça plt.ylim([min,max])
+          # Mostrar quadriculado
+          plt.grid()
+          # Plotando os pontos
+          plt.errorbar(x, valoresExperimentais, 'o', markersize=3.8)
+          # Nomeando os eixos x e y
+          plt.xlabel('Angulo de desvio minimo $ \delta_{min} $ (graus)')
+          plt.ylabel('Comprimento de onda (nm)')
+          # Salvando o gráfico
+          plt.savefig('figura1.png')
+        </pre></code>
+      </figure>
+
+      <figure>
+        <img src="figura1.png" alt="gráfico 1">
+        <figcaption><b>Figura 1</b> - Gráfico do comprimento de onda em função do ângulo de desvio mínimo</figcaption>
+      </figure>
+
+      <h2 id="parte3">3. MMQ</h2>
+
+      <p>
+        Como não tinha encontrado uma biblioteca que realizasse MMQ da reta y = ax + b utilizando as
+        incertezas de y de cada ponto e fornecesse as incertezas em de <i>a</i> e <i>b</i> criei uma
+        classe em Python para calcular utilizando as fórmulas dadas pelo <i>IFGW</i>
+        <a href="https://github.com/Oozaku/Laboratorio-de-Fisica-IV-F428/tree/master/MMQ" target="_blank">disponível aqui</a>,
+        para usá-lo use o seguinte código:
+      </p>
+
+      <code><pre>
+        objeto = linearRegression()
+        objeto.calcular(x,y,incerteza_em_x,incerteza_em_y)
+        incerteza_em_a = objeto.getU_a()
+        incerteza_em_b = objeto.getU_b()
+        a = objeto.getA()
+        b = objeto.getB()
+      </pre><code>
+      </div>
+    </div>
+  </body>
+</html>
